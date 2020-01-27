@@ -92,18 +92,44 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
       dplyr::select(select)
 
     key <- names(update)[changes$changes[[1]][[2]] + 1]
-    old_value <- changes$changes[[1]][[3]]
     new_value <- changes$changes[[1]][[4]]
+      
+    old_value <- changes$changes[[1]][[3]]
+    if (is.null(old_value)) old_value <- NA_character_
     token <- update$token[changes$changes[[1]][[1]] + 1]
+    
+    status <- dplyr::if_else(
+      stringr::str_detect(key, "_invalid"),
+      "invalid",
+      "valid"
+    )
+    key <- stringr::str_remove(key, "_invalid")
+    
+    add_participants_contacts <- dplyr::tibble(
+      token = token,
+      key = key,
+      value = new_value,
+      source = "crowdsourcing",
+      date = as.character(lubridate::today()),
+      service = NA_character_,
+      status = status,
+      status_date = NA_character_
+    )
     
     impexp::sqlite_execute_sql(
       golem::get_golem_options("sqlite_base"),
-      glue::glue("UPDATE crowdsourcing SET {key} = \"{new_value}\" WHERE token = \"{token}\";")
+      glue::glue("DELETE FROM participants_contacts WHERE token = \"{token}\" AND key = \"{key}\" AND status = \"{status}\";")
     )
     
-    rv$df_crowdsourcing <- impexp::sqlite_import(
+    impexp::sqlite_append_rows(
       golem::get_golem_options("sqlite_base"),
-      "crowdsourcing"
+      add_participants_contacts,
+      "participants_contacts"
+    )
+    
+    rv$df_participants_contacts <- impexp::sqlite_import(
+      golem::get_golem_options("sqlite_base"),
+      "participants_contacts"
     )
     
     impexp::sqlite_append_rows(
@@ -115,11 +141,11 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
         old_value = old_value,
         user = rv$user,
         date = as.character(lubridate::today()),
-        status = character(0)
+        status = status
       ),
       "crowdsourcing_log"
     )
-    
+
   })
   
   output$excel <- downloadHandler(

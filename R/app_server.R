@@ -14,7 +14,25 @@ app_server <- function(input, output, session) {
     )
   )
 
+  if (! "crowdsourcing_log" %in% impexp::sqlite_list_tables(golem::get_golem_options("sqlite_base"))) {
+    
+    impexp::sqlite_export(
+      golem::get_golem_options("sqlite_base"), 
+      dplyr::tibble(
+        token = character(0),
+        key = character(0),
+        new_value = character(0),
+        old_value = character(0),
+        user = character(0),
+        date = character(0),
+        status = character(0)
+      ),
+      "crowdsourcing_log"
+    )
+  }
+  
   global <- list()
+  rv <- reactiveValues()
   
   df_crowdsourcing_columns <- impexp::sqlite_import(
     golem::get_golem_options("sqlite_base"),
@@ -34,64 +52,16 @@ app_server <- function(input, output, session) {
     dplyr::filter(as.logical(filter)) %>% 
     dplyr::pull(description)
   
-  if (! "crowdsourcing" %in% impexp::sqlite_list_tables(golem::get_golem_options("sqlite_base"))) {
-    
-    participants <- impexp::sqlite_import(
-      golem::get_golem_options("sqlite_base"),
-      "participants"
-    ) %>% 
-      patchr::normalise_colnames()
-    
-    
-    participants_contacts <- impexp::sqlite_import(
-      golem::get_golem_options("sqlite_base"),
-      "participants_contacts"
-    ) %>% 
-      df_participants_contacts()
-    
-    cron_reponses <- golem::get_golem_options("cron_responses") %>% 
-      impexp::r_import() %>% 
-      dplyr::select(token, completed, optout, lastpage_rate) %>% 
-      dplyr::mutate_if(is.logical, as.character) %>% 
-      dplyr::mutate_at(c("completed", "optout"), dplyr::recode, "TRUE" = "Oui", "FALSE" = "Non") %>% 
-      dplyr::mutate_at("lastpage_rate", scales::percent, decimal.mark = ",", suffix = "\U202F%", accuracy = .1)
-    
-    crowdsourcing <- participants %>% 
-      dplyr::left_join(participants_contacts, by = "token") %>% 
-      dplyr::left_join(cron_reponses, by = "token")
-    
-    add_column <- unname(global$fields) %>% 
-      .[which(!. %in% names(crowdsourcing))]
-    
-    crowdsourcing <- crowdsourcing %>% 
-      dplyr::mutate(!!!stats::setNames(rep(NA_character_, length(add_column)), add_column)) %>% 
-      dplyr::select(unname(global$fields)) %>% 
-      dplyr::arrange_at(c("libelle_diplome", "lastname", "firstname"))
-    
-    impexp::sqlite_export(
-      golem::get_golem_options("sqlite_base"), 
-      crowdsourcing,
-      "crowdsourcing"
-    )
-    
-  }
+  rv$df_participants <- impexp::sqlite_import(
+    golem::get_golem_options("sqlite_base"),
+    "participants"
+  ) %>% 
+    patchr::normalise_colnames()
   
-  if (! "crowdsourcing_log" %in% impexp::sqlite_list_tables(golem::get_golem_options("sqlite_base"))) {
-    
-    impexp::sqlite_export(
-      golem::get_golem_options("sqlite_base"), 
-      dplyr::tibble(
-        token = character(0),
-        key = character(0),
-        new_value = character(0),
-        old_value = character(0),
-        user = character(0),
-        date = character(0),
-        status = character(0)
-      ),
-      "crowdsourcing_log"
-    )
-  }
+  rv$df_participants_contacts <- impexp::sqlite_import(
+    golem::get_golem_options("sqlite_base"),
+    "participants_contacts"
+  )
   
   cron_reponses <- golem::get_golem_options("cron_responses") %>% 
     impexp::r_import() %>% 
@@ -99,20 +69,31 @@ app_server <- function(input, output, session) {
     dplyr::mutate_if(is.logical, as.character) %>% 
     dplyr::mutate_at(c("completed", "optout"), dplyr::recode, "TRUE" = "Oui", "FALSE" = "Non") %>% 
     dplyr::mutate_at("lastpage_rate", scales::percent, decimal.mark = ",", suffix = "\U202F%", accuracy = .1)
-
-  rv <- reactiveValues()
   
-  rv$df_crowdsourcing <- impexp::sqlite_import(
-    golem::get_golem_options("sqlite_base"),
-    "crowdsourcing"
-  ) %>% 
-    dplyr::select(-completed, -optout, -lastpage_rate) %>% 
-    dplyr::left_join(cron_reponses, by = "token") %>% 
-    dplyr::select(unname(global$fields))
+  rv$df_crowdsourcing <- reactive({
+    
+    crowdsourcing <- rv$df_participants %>% 
+      dplyr::left_join(
+        rv$df_participants_contacts %>% 
+          survey.admin::df_participants_contacts_crowdsourcing(),
+        by = "token")
+    
+    add_column <- unname(global$fields) %>% 
+      .[which(!. %in% names(crowdsourcing))]
+    
+    crowdsourcing %>% 
+      dplyr::mutate(!!!stats::setNames(rep(NA_character_, length(add_column)), add_column)) %>% 
+      dplyr::select(unname(global$fields)) %>% 
+      dplyr::arrange_at(c("libelle_diplome", "lastname", "firstname")) %>% 
+      dplyr::select(-completed, -lastpage_rate, -optout) %>% 
+      dplyr::left_join(cron_reponses, by = "token") %>% 
+      dplyr::select(unname(global$fields))
+    
+  })
   
   rv$df_crowdsourcing_user <- reactive({
     
-    df_crowdsourcing_user <- rv$df_crowdsourcing
+    df_crowdsourcing_user <- rv$df_crowdsourcing()
     
     rv$user <- res_auth$user
     
