@@ -105,16 +105,25 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
     )
     key <- stringr::str_remove(key, "_invalid")
     
-    add_participants_contacts <- dplyr::tibble(
-      token = token,
-      key = key,
-      value = new_value,
-      source = "crowdsourcing",
-      date = as.character(lubridate::today()),
-      service = NA_character_,
-      status = status,
-      status_date = NA_character_
-    )
+    hot_update <- dplyr::tibble(
+        token = token,
+        key = key,
+        new_value = new_value
+      ) %>% 
+      tidyr::separate_rows(new_value, sep = " ; ") %>% 
+      dplyr::left_join(
+        rv$df_participants_contacts,
+        by = c("token", "key")
+      ) %>% 
+      dplyr::mutate(
+        source = dplyr::if_else(value != new_value, "crowdsourcing", source),
+        date = dplyr::if_else(value != new_value, as.character(lubridate::today()), date),
+        service = dplyr::if_else(value != new_value, NA_character_, service),
+        status_date = dplyr::if_else(value != new_value, NA_character_, status_date),
+        value = dplyr::if_else(value != new_value, new_value, value),
+        status = status
+      ) %>% 
+      dplyr::select(-new_value)
     
     impexp::sqlite_execute_sql(
       golem::get_golem_options("sqlite_base"),
@@ -123,7 +132,7 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
     
     impexp::sqlite_append_rows(
       golem::get_golem_options("sqlite_base"),
-      add_participants_contacts,
+      hot_update,
       "participants_contacts"
     )
     
