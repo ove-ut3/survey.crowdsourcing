@@ -16,7 +16,8 @@
 mod_filters_ui <- function(id){
   ns <- NS(id)
   tagList(
-    uiOutput(ns("ui_filters"))
+    uiOutput(ns("ui_filters"), inline = TRUE),
+    uiOutput(ns("download"), inline = TRUE)
   )
 }
     
@@ -77,11 +78,11 @@ mod_filters_server <- function(input, output, session, rv, res_auth){
       
       tagList(
         div(
-          style = "display: inline-block; width: 33%; vertical-align: top;",
+          style = "display: inline-block; width: 30%; vertical-align: top;",
           uiOutput(ns("filter_formation"))
         ),
         div(
-          style = "display: inline-block; width: 66%; vertical-align: top;",
+          style = "display: inline-block; width: 60%; vertical-align: top;",
           uiOutput(ns("filter_status"))
         )
       )
@@ -90,7 +91,7 @@ mod_filters_server <- function(input, output, session, rv, res_auth){
       
       tagList(
         div(
-          style = "display: inline-block;",
+          style = "display: inline-block; width: 90%;",
           uiOutput(ns("filter_status"))
         )
       )
@@ -98,6 +99,39 @@ mod_filters_server <- function(input, output, session, rv, res_auth){
     }
     
   })
+  
+  output$download <- renderUI({
+    
+    list(
+      div(style="display: inline-block; float: right; margin-top: 1.4%;", downloadButton(ns("csv"), "CSV")),
+      div(style="display: inline-block; float: right; margin-top: 1.4%;", downloadButton(ns("excel"), "Excel"))
+    )
+    
+  })
+  
+  output$excel <- downloadHandler(
+    
+    filename = function() {
+      "export.xlsx"
+    },
+    content = function(con) {
+      dplyr::select(rv$df_crowdsourcing_hot(), global$fields) %>% 
+        writexl::write_xlsx(con)
+    }
+    
+  )
+  
+  output$csv <- downloadHandler(
+    
+    filename = function() {
+      "export.csv"
+    },
+    content = function(con) {
+      dplyr::select(rv$df_crowdsourcing_hot(), global$fields) %>% 
+        write.csv2(con, row.names = FALSE, na = "")
+    }
+    
+  )
   
   rv$filters <- input
   
