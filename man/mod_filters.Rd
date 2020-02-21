@@ -7,7 +7,7 @@
 \usage{
 mod_filters_ui(id)
 
-mod_filters_server(input, output, session, rv, res_auth)
+mod_filters_server(input, output, session, rv, global, res_auth)
 }
 \arguments{
 \item{id}{shiny id}

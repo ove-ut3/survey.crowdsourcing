@@ -27,7 +27,7 @@ mod_filters_ui <- function(id){
 #' @export
 #' @keywords internal
     
-mod_filters_server <- function(input, output, session, rv, res_auth){
+mod_filters_server <- function(input, output, session, rv, global, res_auth){
   ns <- session$ns
   
   output$filter_formation <- renderUI({

@@ -108,7 +108,7 @@ app_server <- function(input, output, session) {
     
   })
   
-  callModule(mod_filters_server, "filters_ui", rv, res_auth)
+  callModule(mod_filters_server, "filters_ui", rv, global, res_auth)
   
   callModule(mod_stats_values_server, "stats_values_ui", rv)
   
