@@ -9,6 +9,7 @@ app_server <- function(input, output, session) {
         "crowdsourcing_contributors"
       ) %>% 
         patchr::normalise_colnames() %>% 
+        dplyr::select(user, password, code_diplome) %>% 
         tidyr::nest(code_diplome = code_diplome) %>% 
         dplyr::mutate_at("code_diplome", purrr::map, 1)
     )
