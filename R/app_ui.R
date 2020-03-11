@@ -1,12 +1,12 @@
 #' @import shiny shinydashboard
-app_ui <- function() {
+app_ui <- function(title) {
   
   ui <- tagList(
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # List the first level UI elements here 
     dashboardPage(
-      dashboardHeader(title = "Enquêtes d'insertion professionnelle - Suivi des réponses", disable = TRUE),
+      dashboardHeader(title = golem::get_golem_options("title"), disable = TRUE),
       dashboardSidebar(collapsed = TRUE),
       dashboardBody(
         mod_stats_values_ui("stats_values_ui"),
@@ -16,7 +16,8 @@ app_ui <- function() {
     )
   )
   
-  shinymanager::secure_app(ui, language = "fr")
+  ui <- shinymanager::secure_app(ui, language = "fr")
+  ui(title)
   
 }
 
