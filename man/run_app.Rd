@@ -4,7 +4,7 @@
 \alias{run_app}
 \title{Run the Shiny Application}
 \usage{
-run_app(sqlite_base, cron_responses)
+run_app(sqlite_base, cron_responses, title = "Crowdsourcing")
 }
 \description{
 Run the Shiny Application
