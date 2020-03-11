@@ -113,7 +113,8 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
         value = dplyr::if_else(value != new_value, new_value, value),
         status = status
       ) %>% 
-      dplyr::select(-new_value)
+      dplyr::select(-new_value) %>% 
+      unique()
     
     impexp::sqlite_execute_sql(
       golem::get_golem_options("sqlite_base"),
@@ -146,7 +147,5 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
     )
 
   })
-  
-  
   
 }
