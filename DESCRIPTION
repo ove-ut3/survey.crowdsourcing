@@ -12,8 +12,8 @@ Imports:
     glue,
     golem,
     impexp,
+    janitor,
     lubridate,
-    patchr,
     purrr,
     rhandsontable,
     scales,
@@ -28,6 +28,5 @@ Imports:
     writexl
 Remotes:
     ove-ut3/impexp,
-    ove-ut3/patchr,
     ove-ut3/survey.admin
 RoxygenNote: 7.0.2

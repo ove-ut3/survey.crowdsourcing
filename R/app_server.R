@@ -8,7 +8,7 @@ app_server <- function(input, output, session) {
         golem::get_golem_options("sqlite_base"),
         "crowdsourcing_contributors"
       ) %>% 
-        patchr::normalise_colnames() %>% 
+        janitor::clean_names() %>% 
         dplyr::select(user, password, code_diplome) %>% 
         tidyr::nest(code_diplome = code_diplome) %>% 
         dplyr::mutate_at("code_diplome", purrr::map, 1)
@@ -39,7 +39,7 @@ app_server <- function(input, output, session) {
     golem::get_golem_options("sqlite_base"),
     "crowdsourcing_columns"
   ) %>% 
-    dplyr::mutate_at("description", patchr::str_normalise_colnames) %>% 
+    dplyr::mutate_at("description", janitor::make_clean_names) %>% 
     dplyr::filter(as.logical(display)) %>% 
     dplyr::arrange(order)
   
@@ -57,7 +57,7 @@ app_server <- function(input, output, session) {
     golem::get_golem_options("sqlite_base"),
     "participants"
   ) %>% 
-    patchr::normalise_colnames()
+    janitor::clean_names()
   
   rv$df_participants_contacts <- impexp::sqlite_import(
     golem::get_golem_options("sqlite_base"),
