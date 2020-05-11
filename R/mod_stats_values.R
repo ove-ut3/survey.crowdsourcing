@@ -55,7 +55,7 @@ mod_stats_values_server <- function(input, output, session, rv){
   output$diplomes <- renderValueBox(
     valueBox(
       nrow(df_crowdsourcing_stats()),
-      "Diplômés",
+      "Dipl\u00f4m\u00e9s",
       icon = icon("user-graduate")
     )
   )
@@ -63,9 +63,9 @@ mod_stats_values_server <- function(input, output, session, rv){
   output$diplomes_sans_refus <- renderValueBox(
     valueBox(
       df_crowdsourcing_stats() %>%
-        dplyr::filter(optout == "Non") %>%
+        dplyr::filter(.data$optout == "Non") %>%
         nrow(),
-      "Étudiants sans refus de répondre",
+      "\u00c9tudiants sans refus de r\u00e9pondre",
       icon = icon("user-check")
     )
   )
@@ -77,24 +77,24 @@ mod_stats_values_server <- function(input, output, session, rv){
   output$repondants <- renderValueBox({
     valueBox(
       df_crowdsourcing_stats() %>%
-        dplyr::filter(completed == "Oui") %>%
+        dplyr::filter(.data$completed == "Oui") %>%
         nrow(),
-      glue::glue("Répondants au {date_jour}"),
+      glue::glue("R\u00e9pondants au {date_jour}"),
       icon = icon("edit")
     )
   })
   
   output$taux_reponse <- renderValueBox({
     repondants <- df_crowdsourcing_stats() %>%
-      dplyr::filter(completed == "Oui")
+      dplyr::filter(.data$completed == "Oui")
     valueBox(
       scales::percent(
-        nrow(repondants) / nrow(dplyr::filter(df_crowdsourcing_stats(), optout == "Non")),
+        nrow(repondants) / nrow(dplyr::filter(df_crowdsourcing_stats(), .data$optout == "Non")),
         decimal.mark = ",",
         suffix = "\U202F%",
         accuracy = .1
       ),
-      glue::glue("Taux de réponse au {date_jour}"),
+      glue::glue("Taux de r\u00e9ponse au {date_jour}"),
       icon = icon("chart-bar")
     )
   })

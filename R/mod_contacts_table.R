@@ -89,7 +89,7 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
     token <- update$token[changes$changes[[1]][[1]] + 1]
     
     status <- dplyr::if_else(
-      stringr::str_detect(key, "_invalid"),
+      stringr::str_detect(.data$key, "_invalid"),
       "invalid",
       "valid"
     )
@@ -100,20 +100,20 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
         key = key,
         new_value = new_value
       ) %>% 
-      tidyr::separate_rows(new_value, sep = " ; ") %>% 
+      tidyr::separate_rows(.data$new_value, sep = " ; ") %>% 
       dplyr::left_join(
         rv$df_participants_contacts,
         by = c("token", "key")
       ) %>% 
       dplyr::mutate(
-        source = dplyr::if_else(value != new_value, "crowdsourcing", source),
-        date = dplyr::if_else(value != new_value, as.character(lubridate::today()), date),
-        service = dplyr::if_else(value != new_value, NA_character_, service),
-        status_date = dplyr::if_else(value != new_value, NA_character_, status_date),
-        value = dplyr::if_else(value != new_value, new_value, value),
-        status = status
+        source = dplyr::if_else(.data$value != .data$new_value, "crowdsourcing", .data$source),
+        date = dplyr::if_else(.data$value != .data$new_value, as.character(lubridate::today()), .data$date),
+        service = dplyr::if_else(.data$value != .data$new_value, NA_character_, .data$service),
+        status_date = dplyr::if_else(.data$value != .data$new_value, NA_character_, .data$status_date),
+        value = dplyr::if_else(.data$value != .data$new_value, .data$new_value, .data$value),
+        status = .data$status
       ) %>% 
-      dplyr::select(-new_value) %>% 
+      dplyr::select(-.data$new_value) %>% 
       unique()
     
     impexp::sqlite_execute_sql(
