@@ -65,8 +65,8 @@ mod_filters_server <- function(input, output, session, rv, global, res_auth){
     shinyWidgets::selectizeGroupUI(
       ns("filter_status"),
       params = list(
-        completed = list(inputId = "completed", title = "Complété :"),
-        optout = list(inputId = "optout", title = "Refus réponse :")
+        completed = list(inputId = "completed", title = "Compl\u00e9t\u00e9 :"),
+        optout = list(inputId = "optout", title = "Refus r\u00e9ponse :")
       )
     )
     
@@ -128,7 +128,7 @@ mod_filters_server <- function(input, output, session, rv, global, res_auth){
     },
     content = function(con) {
       dplyr::select(rv$df_crowdsourcing_hot(), global$fields) %>% 
-        write.csv2(con, row.names = FALSE, na = "")
+        utils::write.csv2(con, row.names = FALSE, na = "")
     }
     
   )

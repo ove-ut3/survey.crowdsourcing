@@ -4,7 +4,7 @@ Version: 0.1
 Authors@R: person('Stéphane', 'Le Hénanff', email = 'github@le-henanff.fr', role = c('cre', 'aut'))
 Description: Web application to allow contributors to update participants contacts.
     It is designed to work with the survey.admin package.
-License: MIT
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
@@ -12,22 +12,24 @@ Imports:
     glue,
     golem,
     impexp,
+    janitor,
     lubridate,
-    patchr,
     purrr,
     rhandsontable,
+    rlang,
     scales,
     shiny,
     shinyalert,
+    shinydashboard,
     shinymanager,
     shinyWidgets,
     stats,
     stringr,
     survey.admin,
     tidyr,
-    writexl
+    writexl,
+    utils
 Remotes:
     ove-ut3/impexp,
-    ove-ut3/patchr,
     ove-ut3/survey.admin
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
