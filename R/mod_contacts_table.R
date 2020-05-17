@@ -119,11 +119,11 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
       data = dplyr::tibble(
         token = token,
         key = key,
+        status = status,
         new_value = new_value,
         old_value = old_value,
         user = rv$user,
-        date = as.character(lubridate::today()),
-        status = status
+        date = as.character(lubridate::today())
       ),
       "crowdsourcing_log"
     )
