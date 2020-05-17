@@ -30,73 +30,43 @@ mod_filters_ui <- function(id){
 mod_filters_server <- function(input, output, session, rv, global, res_auth){
   ns <- session$ns
   
-  output$filter_formation <- renderUI({
+  output$filters <- renderUI({
     
     req(rv$df_crowdsourcing_user)
     
-    rv$df_crowdsourcing_filter_formation <- callModule(
+    rv$df_crowdsourcing_filters <- callModule(
       module = shinyWidgets::selectizeGroupServer,
-      id = "filter_formation",
+      id = "filters",
       data = rv$df_crowdsourcing_user(),
-      vars = "libelle_diplome"
+      vars = global$fields_filter
     )
     
+    inputId <- global$fields_filter
+    title <- names(global$fields)[which(global$fields == global$fields_filter)]
+    
+    params <- purrr::map2(
+      inputId,
+      title,
+      ~ list(inputId = .x, title = paste0(.y, " :"))
+    )
+    
+    names(params) <- inputId
+
     shinyWidgets::selectizeGroupUI(
-      ns("filter_formation"),
-      params = list(
-        libelle_diplome = 
-          list(inputId = "libelle_diplome", title = "Formation :")
-      )
-    )
-    
-  })
-  
-  output$filter_status <- renderUI({
-    
-    req(rv$df_crowdsourcing_user)
-    
-    rv$df_crowdsourcing_filter_status <- callModule(
-      module = shinyWidgets::selectizeGroupServer,
-      id = "filter_status",
-      data = rv$df_crowdsourcing_user(),
-      vars = c("completed", "optout")
-    )
-    
-    shinyWidgets::selectizeGroupUI(
-      ns("filter_status"),
-      params = list(
-        completed = list(inputId = "completed", title = "Compl\u00e9t\u00e9 :"),
-        optout = list(inputId = "optout", title = "Refus r\u00e9ponse :")
-      )
+      ns("filters"),
+      params = params
     )
     
   })
   
   output$ui_filters <- renderUI({
     
-    if (all(is.na(res_auth$code_diplome[[1]])) | length(res_auth$code_diplome[[1]]) >= 2) {
-      
-      tagList(
-        div(
-          style = "display: inline-block; width: 30%; vertical-align: top;",
-          uiOutput(ns("filter_formation"))
-        ),
-        div(
-          style = "display: inline-block; width: 60%; vertical-align: top;",
-          uiOutput(ns("filter_status"))
-        )
+    tagList(
+      div(
+        style = "display: inline-block; width: 90%;",
+        uiOutput(ns("filters"))
       )
-      
-    } else {
-      
-      tagList(
-        div(
-          style = "display: inline-block; width: 90%;",
-          uiOutput(ns("filter_status"))
-        )
-      )
-      
-    }
+    )
     
   })
   

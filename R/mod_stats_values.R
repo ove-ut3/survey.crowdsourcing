@@ -34,21 +34,9 @@ mod_stats_values_server <- function(input, output, session, rv){
   
   df_crowdsourcing_stats <- reactive({
     
-    req(rv$df_crowdsourcing_user)
+    req(rv$df_crowdsourcing_filters)
     
-    data <- rv$df_crowdsourcing_user()
-    
-    if (!is.null(rv$df_crowdsourcing_filter_formation)) {
-      
-      data <- data %>% 
-        dplyr::semi_join(
-          rv$df_crowdsourcing_filter_formation(),
-          by = "token"
-        )
-      
-    }
-    
-    data
+    rv$df_crowdsourcing_filters()
     
   })
   

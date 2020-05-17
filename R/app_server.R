@@ -9,29 +9,10 @@ app_server <- function(input, output, session) {
         "crowdsourcing_contributors"
       ) %>% 
         janitor::clean_names() %>% 
-        dplyr::select(.data$user, .data$password, .data$code_diplome) %>% 
-        tidyr::nest(code_diplome = .data$code_diplome) %>% 
-        dplyr::mutate_at("code_diplome", purrr::map, 1)
+        tidyr::nest(restriction = -c(.data$user, .data$password))
     )
   )
 
-  if (! "crowdsourcing_log" %in% impexp::sqlite_list_tables(golem::get_golem_options("sqlite_base"))) {
-    
-    impexp::sqlite_export(
-      golem::get_golem_options("sqlite_base"), 
-      dplyr::tibble(
-        token = character(0),
-        key = character(0),
-        new_value = character(0),
-        old_value = character(0),
-        user = character(0),
-        date = character(0),
-        status = character(0)
-      ),
-      "crowdsourcing_log"
-    )
-  }
-  
   global <- list()
   rv <- reactiveValues()
   
@@ -40,10 +21,20 @@ app_server <- function(input, output, session) {
     "crowdsourcing_columns"
   ) %>% 
     dplyr::mutate_at("description", janitor::make_clean_names) %>% 
-    dplyr::filter(as.logical(.data$display)) %>% 
+    dplyr::filter(
+      description %in% c("token", "optout", "completed") |
+      as.logical(.data$display) | 
+      as.logical(.data$edit) |
+      as.logical(.data$filter) |
+      as.logical(.data$restriction)
+    ) %>% 
     dplyr::arrange(.data$order)
   
   global$fields <- stats::setNames(df_crowdsourcing_columns$description, df_crowdsourcing_columns$description_new)
+  
+  global$fields_display <- df_crowdsourcing_columns %>% 
+    dplyr::filter(as.logical(.data$display)) %>% 
+    dplyr::pull(.data$description_new)
   
   global$fields_edit <- df_crowdsourcing_columns %>% 
     dplyr::filter(as.logical(.data$edit)) %>% 
@@ -51,6 +42,10 @@ app_server <- function(input, output, session) {
   
   global$fields_filter <- df_crowdsourcing_columns %>% 
     dplyr::filter(as.logical(.data$filter)) %>% 
+    dplyr::pull(.data$description)
+  
+  global$fields_restriction <- df_crowdsourcing_columns %>% 
+    dplyr::filter(as.logical(.data$restriction)) %>% 
     dplyr::pull(.data$description)
   
   rv$df_participants <- impexp::sqlite_import(
@@ -80,13 +75,11 @@ app_server <- function(input, output, session) {
         by = "token")
     
     add_column <- unname(global$fields) %>% 
-      .[which(!. %in% names(crowdsourcing))]
+      .[which(!. %in% c(names(crowdsourcing), names(cron_reponses)))]
     
     crowdsourcing %>% 
-      dplyr::mutate(!!!stats::setNames(rep(NA_character_, length(.data$add_column)), .data$add_column)) %>% 
-      dplyr::select(unname(global$fields)) %>% 
-      dplyr::arrange_at(c("libelle_diplome", "lastname", "firstname")) %>% 
-      dplyr::select(-.data$completed, -.data$lastpage_rate, -.data$optout) %>% 
+      dplyr::mutate(!!!stats::setNames(rep(NA_character_, length(add_column)), add_column)) %>% 
+      dplyr::arrange_at(c("lastname", "firstname")) %>% 
       dplyr::left_join(cron_reponses, by = "token") %>% 
       dplyr::select(unname(global$fields))
     
@@ -98,13 +91,16 @@ app_server <- function(input, output, session) {
     
     rv$user <- res_auth$user
     
-    if (any(!is.na(res_auth$code_diplome[[1]]))) {
+    if (nrow(res_auth$restriction[[1]]) >= 1) {
       
       df_crowdsourcing_user <- df_crowdsourcing_user %>% 
-        dplyr::filter(.data$code_diplome %in% res_auth$code_diplome[[1]])
-      
+        dplyr::semi_join(
+          res_auth$restriction[[1]],
+          by = global$fields_restriction
+        )
+        
     }
-    
+
     df_crowdsourcing_user
     
   })
