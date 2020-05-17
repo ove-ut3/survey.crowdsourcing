@@ -42,7 +42,7 @@ mod_filters_server <- function(input, output, session, rv, global, res_auth){
     )
     
     inputId <- global$fields_filter
-    title <- names(global$fields)[which(global$fields == global$fields_filter)]
+    title <- names(global$fields)[which(global$fields %in% global$fields_filter)]
     
     params <- purrr::map2(
       inputId,
