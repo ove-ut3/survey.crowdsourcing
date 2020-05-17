@@ -33,10 +33,8 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
     
     req(rv$df_crowdsourcing_filters)
     
-    data <- rv$df_crowdsourcing_filters() %>% 
-      dplyr::select(global$fields[which(names(global$fields) %in% global$fields_display)])
-    
-    data %>%
+    rv$df_crowdsourcing_filters() %>% 
+      dplyr::select(global$fields[which(names(global$fields) %in% global$fields_display)]) %>% 
       rhandsontable::rhandsontable(rowHeaders = NULL, height = 720, allowRemoveRow = FALSE, allowInsertRow = FALSE) %>%
       rhandsontable::hot_table(highlightCol = TRUE, highlightRow = TRUE, stretchH = "all") %>%
       rhandsontable::hot_rows(rowHeights = 35) %>%

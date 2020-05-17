@@ -85,8 +85,11 @@ mod_filters_server <- function(input, output, session, rv, global, res_auth){
       "export.xlsx"
     },
     content = function(con) {
-      dplyr::select(rv$df_crowdsourcing_hot(), global$fields) %>% 
+      
+      rv$df_crowdsourcing_filters() %>% 
+        dplyr::select(global$fields[which(names(global$fields) %in% global$fields_display)]) %>%   
         writexl::write_xlsx(con)
+      
     }
     
   )
@@ -97,7 +100,8 @@ mod_filters_server <- function(input, output, session, rv, global, res_auth){
       "export.csv"
     },
     content = function(con) {
-      dplyr::select(rv$df_crowdsourcing_hot(), global$fields) %>% 
+      rv$df_crowdsourcing_filters() %>% 
+        dplyr::select(global$fields[which(names(global$fields) %in% global$fields_display)]) %>%   
         utils::write.csv2(con, row.names = FALSE, na = "")
     }
     
