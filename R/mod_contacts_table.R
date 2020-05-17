@@ -54,8 +54,10 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
     # update
     req(changes[["changes"]])
     
-    select <- names(global$fields)
-    names(select) <- unname(global$fields)
+    fields_display <- global$fields[which(names(global$fields) %in% global$fields_display)]
+    
+    select <- names(fields_display)
+    names(select) <- unname(fields_display)
 
     update <- input$hot_base_participants %>%
       rhandsontable::hot_to_r() %>%
@@ -66,10 +68,10 @@ mod_contacts_table_server <- function(input, output, session, rv, global, res_au
       
     old_value <- changes$changes[[1]][[3]]
     if (is.null(old_value)) old_value <- NA_character_
-    token <- update$token[changes$changes[[1]][[1]] + 1]
+    token <- rv$df_crowdsourcing_filters()$token[changes$changes[[1]][[1]] + 1]
     
     status <- dplyr::if_else(
-      stringr::str_detect(.data$key, "_invalid"),
+      stringr::str_detect(key, "_invalid"),
       "invalid",
       "valid"
     )
