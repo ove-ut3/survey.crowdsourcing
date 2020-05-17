@@ -29,32 +29,12 @@ mod_contacts_table_ui <- function(id){
 mod_contacts_table_server <- function(input, output, session, rv, global, res_auth){
   ns <- session$ns
   
-  rv$df_crowdsourcing_hot <- reactive({
-    
-    req(rv$df_crowdsourcing_filter_status)
-    
-    data <- rv$df_crowdsourcing_filter_status()
-    
-    if (!is.null(rv$df_crowdsourcing_filter_formation)) {
-      
-      data <- data %>% 
-        dplyr::semi_join(
-          rv$df_crowdsourcing_filter_formation(),
-          by = "token"
-        )
-      
-    }
-    
-    data
-    
-  })
-  
   output$hot_base_participants <- rhandsontable::renderRHandsontable({
     
-    req(rv$df_crowdsourcing_filter_status)
+    req(rv$df_crowdsourcing_filters)
     
-    data <- rv$df_crowdsourcing_hot() %>% 
-      dplyr::select(global$fields)
+    data <- rv$df_crowdsourcing_filters() %>% 
+      dplyr::select(global$fields[which(names(global$fields) %in% global$fields_display)])
     
     data %>%
       rhandsontable::rhandsontable(rowHeaders = NULL, height = 720, allowRemoveRow = FALSE, allowInsertRow = FALSE) %>%
